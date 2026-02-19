@@ -1,74 +1,106 @@
 .dashboard {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: #eef0f6;
 }
 
+/* ── Header ──────────────────────────────── */
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
-  padding: 20px 40px;
+  padding: 0 40px;
+  height: 58px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.35);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .dashboard-header h1 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .user-info span {
-  font-size: 14px;
+  font-size: 13px;
+  opacity: 0.88;
 }
 
 .btn-logout {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  padding: 8px 16px;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  transition: var(--transition);
 }
 
 .btn-logout:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.26);
 }
 
+/* ── Nav ─────────────────────────────────── */
 .dashboard-nav {
   background: white;
   padding: 0 40px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .dashboard-nav button {
   background: none;
-  padding: 15px 20px;
-  color: #666;
-  font-size: 14px;
+  padding: 14px 18px;
+  color: var(--gray-500);
+  font-size: 13.5px;
   font-weight: 500;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
+  border-bottom: 2.5px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
 }
 
 .dashboard-nav button:hover {
-  color: #667eea;
+  color: var(--primary);
+  background: var(--primary-bg);
 }
 
 .dashboard-nav button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
 }
 
+/* ── Content ─────────────────────────────── */
 .dashboard-content {
-  padding: 30px 40px;
+  padding: 28px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 0 20px;
+  }
+
+  .dashboard-nav {
+    padding: 0 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .dashboard-content {
+    padding: 20px 16px;
+  }
 }
