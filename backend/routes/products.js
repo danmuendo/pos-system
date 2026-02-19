@@ -486,7 +486,7 @@ router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
 });
 
 // Delete product
-router.delete('/:id', requireRoles('owner', 'admin'), async (req, res) => {
+router.delete('/:id', requireRoles('owner'), async (req, res) => {
   try {
     const { id } = req.params;
 

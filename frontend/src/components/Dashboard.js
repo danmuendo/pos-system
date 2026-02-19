@@ -90,7 +90,7 @@ function Dashboard({ user, token, onLogout }) {
           <ProductPerformanceReport token={token} />
         )}
         {activeTab === 'shift-close' && canManage && <ShiftCloseReport token={token} />}
-        {activeTab === 'staff' && canManageUsers && <StaffManagement token={token} />}
+        {activeTab === 'staff' && canManageUsers && <StaffManagement token={token} user={user} />}
         {activeTab === 'account' && <AccountSettings token={token} user={user} />}
       </main>
     </div>

@@ -6,7 +6,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const API_BASE_URL = API_URL.replace('/api', '');
 
 function AccountSettings({ token, user }) {
-  const canManageBusinessProfile = user?.role === 'owner' || user?.role === 'admin';
+  const canManageBusinessProfile = user?.role === 'owner';
   const [passwordForm, setPasswordForm] = useState({
     current_password: '',
     new_password: '',

@@ -4,7 +4,8 @@ import './StaffManagement.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-function StaffManagement({ token }) {
+function StaffManagement({ token, user }) {
+  const isOwner = user?.role === 'owner';
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({
     username: '',
@@ -146,7 +147,7 @@ function StaffManagement({ token }) {
           onChange={(e) => setFormData({ ...formData, role: e.target.value })}
         >
           <option value="cashier">Cashier</option>
-          <option value="admin">Admin</option>
+          {isOwner && <option value="admin">Admin</option>}
         </select>
         <button className="btn-primary" type="submit" disabled={loading}>
           {loading ? 'Saving...' : editingUserId ? 'Update Staff Account' : 'Create Staff Account'}
@@ -178,20 +179,24 @@ function StaffManagement({ token }) {
               <td>{member.role}</td>
               <td>{new Date(member.created_at).toLocaleString()}</td>
               <td className="staff-actions">
-                <button
-                  className="btn-edit"
-                  type="button"
-                  onClick={() => handleEdit(member)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn-delete"
-                  type="button"
-                  onClick={() => handleDelete(member)}
-                >
-                  Delete
-                </button>
+                {(isOwner || member.role !== 'admin') && (
+                  <button
+                    className="btn-edit"
+                    type="button"
+                    onClick={() => handleEdit(member)}
+                  >
+                    Edit
+                  </button>
+                )}
+                {(isOwner || member.role !== 'admin') && (
+                  <button
+                    className="btn-delete"
+                    type="button"
+                    onClick={() => handleDelete(member)}
+                  >
+                    Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}

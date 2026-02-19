@@ -180,6 +180,11 @@ router.post('/users', authMiddleware, requireRoles('owner', 'admin'), async (req
       return res.status(400).json({ error: 'Role must be cashier or admin' });
     }
 
+    // Admin can only create cashier accounts; only owner can create admin accounts
+    if (role === 'admin' && req.role !== 'owner') {
+      return res.status(403).json({ error: 'Only the owner can create admin accounts' });
+    }
+
     const existingUser = await pool.query(
       'SELECT id FROM users WHERE username = $1',
       [username]
@@ -262,12 +267,22 @@ router.put('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (
       return res.status(400).json({ error: 'You cannot change your own role' });
     }
 
+    // Admin cannot edit admin accounts
+    if (req.role === 'admin' && targetUser.role === 'admin') {
+      return res.status(403).json({ error: 'Admins cannot edit other admin accounts' });
+    }
+
     if (role && !['cashier', 'admin', 'owner'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
 
     if (role === 'owner' && req.role !== 'owner') {
       return res.status(403).json({ error: 'Only owner can assign owner role' });
+    }
+
+    // Admin cannot promote anyone to admin
+    if (role === 'admin' && req.role !== 'owner') {
+      return res.status(403).json({ error: 'Only the owner can assign admin role' });
     }
 
     if (username && username !== targetUser.username) {
@@ -359,6 +374,11 @@ router.delete('/users/:id', authMiddleware, requireRoles('owner', 'admin'), asyn
       return res.status(403).json({ error: 'Only owner can delete owner account' });
     }
 
+    // Admin cannot delete admin accounts
+    if (req.role === 'admin' && targetUser.role === 'admin') {
+      return res.status(403).json({ error: 'Admins cannot delete other admin accounts' });
+    }
+
     await pool.query(
       'DELETE FROM users WHERE id = $1 AND owner_user_id = $2',
       [id, req.scopeUserId]
@@ -401,7 +421,7 @@ router.get('/business-profile', authMiddleware, requireRoles('owner', 'admin'), 
   }
 });
 
-router.put('/business-profile', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.put('/business-profile', authMiddleware, requireRoles('owner'), async (req, res) => {
   try {
     const {
       business_name,
@@ -468,7 +488,7 @@ router.put('/business-profile', authMiddleware, requireRoles('owner', 'admin'), 
 router.post(
   '/upload-logo',
   authMiddleware,
-  requireRoles('owner', 'admin'),
+  requireRoles('owner'),
   uploadLogo.single('logo'),
   async (req, res) => {
     try {
@@ -501,7 +521,7 @@ router.post(
   }
 );
 
-router.delete('/logo', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.delete('/logo', authMiddleware, requireRoles('owner'), async (req, res) => {
   try {
     await pool.query('UPDATE users SET business_logo_url = NULL WHERE id = $1', [req.scopeUserId]);
 

@@ -497,9 +497,11 @@ function ProductManagement({ token, user }) {
                       >
                         Adjust Stock
                       </button>
-                      <button onClick={() => handleDelete(product.id)} className="btn-delete">
-                        Delete
-                      </button>
+                      {user?.role === 'owner' && (
+                        <button onClick={() => handleDelete(product.id)} className="btn-delete">
+                          Delete
+                        </button>
+                      )}
                     </>
                   ) : (
                     <span>-</span>
