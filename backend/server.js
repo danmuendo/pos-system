@@ -10,12 +10,26 @@ const { authMiddleware } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware: Explicit CORS handling for production and local dev
+// Dynamic CORS for production and local dev
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
+// Add Vercel frontend URLs dynamically
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+} else {
+  // Default Vercel production URLs
+  allowedOrigins.push(
+    'https://pos-frontend-beta-gilt.vercel.app',
+    'https://pos-frontend-git-main-danmuendos-projects.vercel.app',
+    'https://pos-frontend-danmuendos-projects.vercel.app'
+  );
+}
+
 app.use(cors({
-  origin: [
-    'https://pos-frontend-beta-gilt.vercel.app', // Your Vercel URL
-    'http://localhost:3000'
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

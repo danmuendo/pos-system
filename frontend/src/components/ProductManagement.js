@@ -124,7 +124,8 @@ function ProductManagement({ token, user }) {
           }
         );
         
-        imageUrl = `${API_URL.replace('/api', '')}${uploadResponse.data.image_url}`;
+        // Cloudinary returns the full URL directly
+        imageUrl = uploadResponse.data.image_url;
       }
       
       const productData = {
