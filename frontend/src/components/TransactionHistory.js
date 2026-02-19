@@ -73,6 +73,14 @@ function TransactionHistory({ token, user }) {
     return date.toLocaleString();
   };
 
+  const UNIT_LABELS = { item: '', kg: 'kg', gram: 'g', litre: 'L', ml: 'ml' };
+  const getUnitLabel = (unit) => UNIT_LABELS[unit] || '';
+  const formatQty = (qty, unit) => {
+    const n = Number(qty);
+    if (!unit || unit === 'item') return String(Math.round(n));
+    return n % 1 === 0 ? String(n) : n.toFixed(3).replace(/0+$/, '');
+  };
+
   const openReceipt = (transactionId) => {
     if (!transactionId) return;
     window.open(`/receipt/${transactionId}`, '_blank', 'noopener,noreferrer');
@@ -206,14 +214,23 @@ function TransactionHistory({ token, user }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedTransaction.items.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.product_name}</td>
-                      <td>{item.quantity}</td>
-                      <td>KSh {parseFloat(item.unit_price).toFixed(2)}</td>
-                      <td>KSh {parseFloat(item.subtotal).toFixed(2)}</td>
-                    </tr>
-                  ))}
+                  {selectedTransaction.items.map((item, index) => {
+                    const unitLabel = getUnitLabel(item.unit);
+                    return (
+                      <tr key={index}>
+                        <td>{item.product_name}</td>
+                        <td>
+                          {formatQty(item.quantity, item.unit)}
+                          {unitLabel ? ` ${unitLabel}` : ''}
+                        </td>
+                        <td>
+                          KSh {parseFloat(item.unit_price).toFixed(2)}
+                          {unitLabel ? `/${unitLabel}` : ''}
+                        </td>
+                        <td>KSh {parseFloat(item.subtotal).toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 

@@ -43,6 +43,15 @@ function ReceiptPrint({ token }) {
 
   const formatCurrency = (amount) => `KSh ${Number(amount || 0).toFixed(2)}`;
 
+  const UNIT_LABELS = { item: '', kg: 'kg', gram: 'g', litre: 'L', ml: 'ml' };
+  const getUnitLabel = (unit) => UNIT_LABELS[unit] || '';
+
+  const formatQty = (qty, unit) => {
+    const n = Number(qty);
+    if (!unit || unit === 'item') return String(Math.round(n));
+    return n % 1 === 0 ? String(n) : n.toFixed(3).replace(/0+$/, '');
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleString();
@@ -136,14 +145,23 @@ function ReceiptPrint({ token }) {
             </tr>
           </thead>
           <tbody>
-            {receipt.items.map((item, index) => (
-              <tr key={`${item.product_name}-${index}`}>
-                <td>{item.product_name}</td>
-                <td>{item.quantity}</td>
-                <td>{formatCurrency(item.unit_price)}</td>
-                <td>{formatCurrency(item.subtotal)}</td>
-              </tr>
-            ))}
+            {receipt.items.map((item, index) => {
+              const unitLabel = getUnitLabel(item.unit);
+              return (
+                <tr key={`${item.product_name}-${index}`}>
+                  <td>{item.product_name}</td>
+                  <td>
+                    {formatQty(item.quantity, item.unit)}
+                    {unitLabel ? ` ${unitLabel}` : ''}
+                  </td>
+                  <td>
+                    {formatCurrency(item.unit_price)}
+                    {unitLabel ? `/${unitLabel}` : ''}
+                  </td>
+                  <td>{formatCurrency(item.subtotal)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

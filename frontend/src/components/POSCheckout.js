@@ -4,6 +4,22 @@ import './POSCheckout.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+const UNIT_LABELS = {
+  item: '',
+  kg: 'kg',
+  gram: 'g',
+  litre: 'L',
+  ml: 'ml',
+};
+
+const getUnitLabel = (unit) => UNIT_LABELS[unit] || '';
+
+const formatQty = (qty, unit) => {
+  const n = Number(qty);
+  if (unit === 'item') return String(Math.round(n));
+  return n % 1 === 0 ? String(n) : n.toFixed(3).replace(/0+$/, '');
+};
+
 function POSCheckout({ token }) {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
@@ -31,13 +47,15 @@ function POSCheckout({ token }) {
   };
 
   const addToCart = (product) => {
+    const unit = product.unit || 'item';
+    const defaultQty = unit === 'item' ? 1 : 1;
     const existingItem = cart.find((item) => item.product_id === product.id);
 
     if (existingItem) {
       setCart(
         cart.map((item) =>
           item.product_id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + defaultQty }
             : item
         )
       );
@@ -48,7 +66,8 @@ function POSCheckout({ token }) {
           product_id: product.id,
           name: product.name,
           price: parseFloat(product.price),
-          quantity: 1,
+          unit,
+          quantity: defaultQty,
         },
       ]);
     }
@@ -77,15 +96,26 @@ function POSCheckout({ token }) {
   };
 
   const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
+    const qty = Number(newQuantity);
+    if (isNaN(qty) || qty <= 0) {
       removeFromCart(productId);
     } else {
       setCart(
         cart.map((item) =>
-          item.product_id === productId ? { ...item, quantity: newQuantity } : item
+          item.product_id === productId ? { ...item, quantity: qty } : item
         )
       );
     }
+  };
+
+  const addQuickWeight = (productId, amount) => {
+    setCart(
+      cart.map((item) =>
+        item.product_id === productId
+          ? { ...item, quantity: Math.max(0, Number((item.quantity + amount).toFixed(3))) }
+          : item
+      )
+    );
   };
 
   const removeFromCart = (productId) => {
@@ -231,7 +261,10 @@ function POSCheckout({ token }) {
                   />
                 )}
                 <h3>{product.name}</h3>
-                <p className="product-price">KSh {parseFloat(product.price).toFixed(2)}</p>
+                <p className="product-price">
+                  KSh {parseFloat(product.price).toFixed(2)}
+                  {product.unit && product.unit !== 'item' ? `/${getUnitLabel(product.unit)}` : ''}
+                </p>
                 {product.category && (
                   <span className="product-category">{product.category}</span>
                 )}
@@ -252,20 +285,75 @@ function POSCheckout({ token }) {
                 <div key={item.product_id} className="cart-item">
                   <div className="item-info">
                     <h4>{item.name}</h4>
-                    <p>KSh {item.price.toFixed(2)}</p>
+                    <p>
+                      KSh {item.price.toFixed(2)}
+                      {item.unit && item.unit !== 'item' ? `/${getUnitLabel(item.unit)}` : ' each'}
+                    </p>
                   </div>
                   <div className="quantity-controls">
-                    <button
-                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                    >
-                      -
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                    >
-                      +
-                    </button>
+                    {item.unit !== 'item' ? (
+                      <>
+                        <div className="qty-input-row">
+                          <button
+                            onClick={() => addQuickWeight(item.product_id, -0.25)}
+                            title="-0.25"
+                          >
+                            -¼
+                          </button>
+                          <button
+                            onClick={() => addQuickWeight(item.product_id, -0.5)}
+                            title="-0.5"
+                          >
+                            -½
+                          </button>
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0.001"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateQuantity(item.product_id, parseFloat(e.target.value) || 0)
+                            }
+                            className="qty-decimal-input"
+                          />
+                          <button
+                            onClick={() => addQuickWeight(item.product_id, 0.25)}
+                            title="+0.25"
+                          >
+                            +¼
+                          </button>
+                          <button
+                            onClick={() => addQuickWeight(item.product_id, 0.5)}
+                            title="+0.5"
+                          >
+                            +½
+                          </button>
+                        </div>
+                        <div className="quick-weight-row">
+                          <button onClick={() => updateQuantity(item.product_id, 0.25)}>¼ {getUnitLabel(item.unit)}</button>
+                          <button onClick={() => updateQuantity(item.product_id, 0.5)}>½ {getUnitLabel(item.unit)}</button>
+                          <button onClick={() => updateQuantity(item.product_id, 1)}>1 {getUnitLabel(item.unit)}</button>
+                          <button onClick={() => updateQuantity(item.product_id, 2)}>2 {getUnitLabel(item.unit)}</button>
+                        </div>
+                        <span className="qty-label">
+                          {formatQty(item.quantity, item.unit)} {getUnitLabel(item.unit)}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                        >
+                          -
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div className="item-total">
                     KSh {(item.price * item.quantity).toFixed(2)}

@@ -303,18 +303,22 @@ router.post('/', requireRoles('owner', 'admin'), async (req, res) => {
       price,
       cost_price,
       stock_quantity,
+      unit,
       category,
       category_id,
       image_url,
     } = req.body;
+
+    const VALID_UNITS = ['item', 'kg', 'litre', 'gram', 'ml'];
+    const normalizedUnit = VALID_UNITS.includes(unit) ? unit : 'item';
 
     const resolvedCategory = await resolveCategory(client, req.scopeUserId, category_id, category);
     const normalizedBarcode = normalizeBarcode(barcode);
 
     const result = await client.query(
       `INSERT INTO products (
-         name, barcode, description, price, cost_price, stock_quantity, category, category_id, image_url, user_id
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         name, barcode, description, price, cost_price, stock_quantity, unit, category, category_id, image_url, user_id
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         name,
@@ -323,6 +327,7 @@ router.post('/', requireRoles('owner', 'admin'), async (req, res) => {
         price,
         cost_price || null,
         stock_quantity || 0,
+        normalizedUnit,
         resolvedCategory.category,
         resolvedCategory.category_id,
         image_url,
@@ -363,6 +368,7 @@ router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
       price,
       cost_price,
       stock_quantity,
+      unit,
       category,
       category_id,
       image_url,
@@ -375,6 +381,9 @@ router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
     if (oldProductResult.rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
+    const VALID_UNITS = ['item', 'kg', 'litre', 'gram', 'ml'];
+    const normalizedUnit = VALID_UNITS.includes(unit) ? unit : (oldProductResult.rows[0].unit || 'item');
     
     const resolvedCategory = await resolveCategory(client, req.scopeUserId, category_id, category);
     const normalizedBarcode = normalizeBarcode(barcode);
@@ -382,8 +391,8 @@ router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
     const result = await client.query(
       `UPDATE products 
        SET name = $1, barcode = $2, description = $3, price = $4, cost_price = $5, stock_quantity = $6, 
-           category = $7, category_id = $8, image_url = $9, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $10 AND user_id = $11 RETURNING *`,
+           unit = $7, category = $8, category_id = $9, image_url = $10, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $11 AND user_id = $12 RETURNING *`,
       [
         name,
         normalizedBarcode,
@@ -391,6 +400,7 @@ router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
         price,
         cost_price || null,
         stock_quantity,
+        normalizedUnit,
         resolvedCategory.category,
         resolvedCategory.category_id,
         image_url,

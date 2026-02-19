@@ -38,7 +38,7 @@ const getDateWindow = (dateFromParam, dateToParam) => {
 
 const fetchTransactionItems = async (client, transactionId) => {
   const itemsResult = await client.query(
-    `SELECT product_id, product_name, quantity, unit_price, subtotal
+    `SELECT product_id, product_name, quantity, unit_price, subtotal, unit
      FROM transaction_items
      WHERE transaction_id = $1`,
     [transactionId]
@@ -71,7 +71,8 @@ const buildReceiptData = async (transactionId, scopeUserId) => {
            'product_name', ti.product_name,
            'quantity', ti.quantity,
            'unit_price', ti.unit_price,
-           'subtotal', ti.subtotal
+           'subtotal', ti.subtotal,
+           'unit', ti.unit
          )
        ) AS items
      FROM transactions t
@@ -116,6 +117,7 @@ const buildReceiptData = async (transactionId, scopeUserId) => {
       quantity: Number(item.quantity),
       unit_price: Number(item.unit_price),
       subtotal: Number(item.subtotal),
+      unit: item.unit || 'item',
     })),
   };
 };
@@ -156,20 +158,25 @@ router.post('/checkout', async (req, res) => {
       }
 
       const product = productResult.rows[0];
-      if (product.stock_quantity < item.quantity) {
+      const requestedQty = Number(item.quantity);
+      if (isNaN(requestedQty) || requestedQty <= 0) {
+        throw new Error(`Invalid quantity for ${product.name}`);
+      }
+      if (Number(product.stock_quantity) < requestedQty) {
         throw new Error(
-          `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, Requested: ${item.quantity}`
+          `Insufficient stock for ${product.name}. Available: ${Number(product.stock_quantity)}, Requested: ${requestedQty}`
         );
       }
 
-      const subtotal = Number(product.price) * Number(item.quantity);
+      const subtotal = Number(product.price) * requestedQty;
       totalAmount += subtotal;
 
       transactionItems.push({
         product_id: product.id,
         product_name: product.name,
-        quantity: item.quantity,
+        quantity: requestedQty,
         unit_price: product.price,
+        unit: product.unit || 'item',
         subtotal,
       });
     }
@@ -201,9 +208,9 @@ router.post('/checkout', async (req, res) => {
     for (const item of transactionItems) {
       await client.query(
         `INSERT INTO transaction_items (
-           transaction_id, product_id, product_name, quantity, unit_price, subtotal
+           transaction_id, product_id, product_name, quantity, unit_price, subtotal, unit
          )
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           transaction.id,
           item.product_id,
@@ -211,6 +218,7 @@ router.post('/checkout', async (req, res) => {
           item.quantity,
           item.unit_price,
           item.subtotal,
+          item.unit,
         ]
       );
     }
@@ -493,8 +501,8 @@ router.post('/:id/void', requireRoles('owner', 'admin'), async (req, res) => {
     for (const item of originalItems) {
       await client.query(
         `INSERT INTO transaction_items (
-           transaction_id, product_id, product_name, quantity, unit_price, subtotal
-         ) VALUES ($1, $2, $3, $4, $5, $6)`,
+           transaction_id, product_id, product_name, quantity, unit_price, subtotal, unit
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           reversalResult.rows[0].id,
           item.product_id,
@@ -502,6 +510,7 @@ router.post('/:id/void', requireRoles('owner', 'admin'), async (req, res) => {
           item.quantity * -1,
           item.unit_price,
           item.subtotal * -1,
+          item.unit || 'item',
         ]
       );
 
@@ -602,8 +611,8 @@ router.post('/:id/refund', requireRoles('owner', 'admin'), async (req, res) => {
     for (const item of originalItems) {
       await client.query(
         `INSERT INTO transaction_items (
-           transaction_id, product_id, product_name, quantity, unit_price, subtotal
-         ) VALUES ($1, $2, $3, $4, $5, $6)`,
+           transaction_id, product_id, product_name, quantity, unit_price, subtotal, unit
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           reversalResult.rows[0].id,
           item.product_id,
@@ -611,6 +620,7 @@ router.post('/:id/refund', requireRoles('owner', 'admin'), async (req, res) => {
           item.quantity * -1,
           item.unit_price,
           item.subtotal * -1,
+          item.unit || 'item',
         ]
       );
 
@@ -764,8 +774,9 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
          ti.product_id,
          ti.product_name,
          COALESCE(c.name, p.category) AS category,
-         SUM(ti.quantity)::int AS quantity_sold,
-         COALESCE(SUM(ti.subtotal), 0) AS revenue
+         SUM(ti.quantity)::numeric AS quantity_sold,
+         COALESCE(SUM(ti.subtotal), 0) AS revenue,
+         COALESCE(p.unit, 'item') AS unit
        FROM transaction_items ti
        INNER JOIN transactions t ON t.id = ti.transaction_id
        LEFT JOIN products p ON p.id = ti.product_id AND p.user_id = t.user_id
@@ -775,7 +786,7 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
          AND t.status = 'completed'
          AND t.completed_at >= $2
          AND t.completed_at <= $3
-       GROUP BY ti.product_id, ti.product_name, c.name, p.category
+       GROUP BY ti.product_id, ti.product_name, c.name, p.category, p.unit
        ORDER BY quantity_sold DESC, revenue DESC
        LIMIT 20`,
       [req.scopeUserId, range.start, range.end]
@@ -786,9 +797,10 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
          ti.product_id,
          ti.product_name,
          COALESCE(c.name, p.category) AS category,
-         SUM(ti.quantity)::int AS quantity_sold,
+         SUM(ti.quantity)::numeric AS quantity_sold,
          COALESCE(SUM(ti.subtotal), 0) AS revenue,
          COALESCE(p.cost_price, 0) AS cost_price,
+         COALESCE(p.unit, 'item') AS unit,
          COALESCE(SUM(ti.quantity * COALESCE(p.cost_price, 0)), 0) AS estimated_cost,
          COALESCE(SUM(ti.subtotal), 0) - COALESCE(SUM(ti.quantity * COALESCE(p.cost_price, 0)), 0) AS gross_profit,
          CASE
@@ -807,7 +819,7 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
          AND t.completed_at >= $2
          AND t.completed_at <= $3
          AND p.cost_price IS NOT NULL
-       GROUP BY ti.product_id, ti.product_name, c.name, p.category, p.cost_price
+       GROUP BY ti.product_id, ti.product_name, c.name, p.category, p.cost_price, p.unit
        HAVING SUM(ti.quantity) > 0
        ORDER BY margin_percent ASC, revenue DESC
        LIMIT 20`,
@@ -823,6 +835,7 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
         category: row.category || '-',
         quantity_sold: Number(row.quantity_sold),
         revenue: Number(row.revenue),
+        unit: row.unit || 'item',
       })),
       low_margin: lowMarginResult.rows.map((row) => ({
         product_id: row.product_id,
@@ -834,6 +847,7 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
         estimated_cost: Number(row.estimated_cost),
         gross_profit: Number(row.gross_profit),
         margin_percent: Number(row.margin_percent),
+        unit: row.unit || 'item',
       })),
     });
   } catch (error) {
@@ -852,7 +866,8 @@ router.get('/', async (req, res) => {
                   'product_name', ti.product_name,
                   'quantity', ti.quantity,
                   'unit_price', ti.unit_price,
-                  'subtotal', ti.subtotal
+                  'subtotal', ti.subtotal,
+                  'unit', ti.unit
                 )
               ) AS items
        FROM transactions t
@@ -898,7 +913,8 @@ router.get('/:id', async (req, res) => {
                   'product_name', ti.product_name,
                   'quantity', ti.quantity,
                   'unit_price', ti.unit_price,
-                  'subtotal', ti.subtotal
+                  'subtotal', ti.subtotal,
+                  'unit', ti.unit
                 )
               ) AS items
        FROM transactions t

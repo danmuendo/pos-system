@@ -16,6 +16,7 @@ function ProductManagement({ token, user }) {
     price: '',
     cost_price: '',
     stock_quantity: '',
+    unit: 'item',
     category_id: '',
     image_url: '',
   });
@@ -168,6 +169,7 @@ function ProductManagement({ token, user }) {
       price: product.price,
       cost_price: product.cost_price || '',
       stock_quantity: product.stock_quantity,
+      unit: product.unit || 'item',
       category_id: product.category_id ? String(product.category_id) : '',
       image_url: product.image_url || '',
     });
@@ -208,6 +210,7 @@ function ProductManagement({ token, user }) {
       price: '',
       cost_price: '',
       stock_quantity: '',
+      unit: 'item',
       category_id: '',
       image_url: '',
     });
@@ -345,12 +348,24 @@ function ProductManagement({ token, user }) {
           </div>
 
           <div className="form-row">
+            <select
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}
+            >
+              <option value="item">Item (piece/unit)</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="gram">Gram (g)</option>
+              <option value="litre">Litre (L)</option>
+              <option value="ml">Millilitre (ml)</option>
+            </select>
             <input
               type="number"
               name="stock_quantity"
-              placeholder="Stock Quantity"
+              placeholder={`Stock Quantity (${formData.unit === 'item' ? 'pieces' : formData.unit})`}
               value={formData.stock_quantity}
               onChange={handleChange}
+              step={formData.unit === 'item' ? '1' : '0.001'}
               min="0"
               required
             />
@@ -375,6 +390,7 @@ function ProductManagement({ token, user }) {
               <th>Name</th>
               <th>Barcode</th>
               <th>Category</th>
+              <th>Unit</th>
               <th>Price</th>
               <th>Cost</th>
               <th>Stock</th>
@@ -399,7 +415,8 @@ function ProductManagement({ token, user }) {
                 <td>{product.name}</td>
                 <td>{product.barcode || '-'}</td>
                 <td>{product.category || '-'}</td>
-                <td>KSh {parseFloat(product.price).toFixed(2)}</td>
+                <td>{product.unit === 'item' ? 'Item' : product.unit || 'Item'}</td>
+                <td>KSh {parseFloat(product.price).toFixed(2)}{product.unit && product.unit !== 'item' ? `/${product.unit}` : ''}</td>
                 <td>
                   {product.cost_price !== null && product.cost_price !== undefined
                     ? `KSh ${parseFloat(product.cost_price).toFixed(2)}`
@@ -407,7 +424,10 @@ function ProductManagement({ token, user }) {
                 </td>
                 <td>
                   <span className={`stock-quantity ${getStockStatus(product.stock_quantity)}`}>
-                    {product.stock_quantity}
+                    {Number(product.stock_quantity) % 1 === 0
+                      ? Number(product.stock_quantity)
+                      : Number(product.stock_quantity).toFixed(3).replace(/0+$/, '')}
+                    {product.unit && product.unit !== 'item' ? ` ${product.unit}` : ''}
                   </span>
                 </td>
                 <td>

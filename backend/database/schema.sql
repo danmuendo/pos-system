@@ -32,7 +32,8 @@ CREATE TABLE products (
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     cost_price DECIMAL(10, 2),
-    stock_quantity INTEGER DEFAULT 0,
+    stock_quantity DECIMAL(10, 3) DEFAULT 0,
+    unit VARCHAR(20) NOT NULL DEFAULT 'item',
     category VARCHAR(100),
     category_id INTEGER REFERENCES categories(id),
     image_url TEXT,
@@ -67,9 +68,10 @@ CREATE TABLE transaction_items (
     transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
     product_name VARCHAR(200) NOT NULL,
-    quantity INTEGER NOT NULL,
+    quantity DECIMAL(10, 3) NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL
+    subtotal DECIMAL(10, 2) NOT NULL,
+    unit VARCHAR(20) NOT NULL DEFAULT 'item'
 );
 
 -- Immutable audit logs

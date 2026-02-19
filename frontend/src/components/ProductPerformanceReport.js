@@ -20,6 +20,14 @@ function ProductPerformanceReport({ token }) {
   const formatCurrency = (value) => `KSh ${Number(value || 0).toFixed(2)}`;
   const formatPercent = (value) => `${Number(value || 0).toFixed(2)}%`;
 
+  const UNIT_LABELS = { item: '', kg: 'kg', gram: 'g', litre: 'L', ml: 'ml' };
+  const getUnitLabel = (unit) => UNIT_LABELS[unit] || '';
+  const formatQty = (qty, unit) => {
+    const n = Number(qty);
+    if (!unit || unit === 'item') return String(Math.round(n));
+    return n % 1 === 0 ? String(n) : n.toFixed(3).replace(/0+$/, '');
+  };
+
   // 2. Wrap fetchReport in useCallback
   // This ensures the function only changes if dateFrom, dateTo, or token change.
   const fetchReport = useCallback(async () => {
@@ -78,14 +86,20 @@ function ProductPerformanceReport({ token }) {
                     <td colSpan="4">No completed sales in this date range.</td>
                   </tr>
                 ) : (
-                  report.top_selling.map((item) => (
-                    <tr key={`top-${item.product_id}-${item.product_name}`}>
-                      <td>{item.product_name}</td>
-                      <td>{item.category}</td>
-                      <td>{item.quantity_sold}</td>
-                      <td>{formatCurrency(item.revenue)}</td>
-                    </tr>
-                  ))
+                  report.top_selling.map((item) => {
+                    const unitLabel = getUnitLabel(item.unit);
+                    return (
+                      <tr key={`top-${item.product_id}-${item.product_name}`}>
+                        <td>{item.product_name}</td>
+                        <td>{item.category}</td>
+                        <td>
+                          {formatQty(item.quantity_sold, item.unit)}
+                          {unitLabel ? ` ${unitLabel}` : ''}
+                        </td>
+                        <td>{formatCurrency(item.revenue)}</td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -113,17 +127,23 @@ function ProductPerformanceReport({ token }) {
                     </td>
                   </tr>
                 ) : (
-                  report.low_margin.map((item) => (
-                    <tr key={`margin-${item.product_id}-${item.product_name}`}>
-                      <td>{item.product_name}</td>
-                      <td>{item.category}</td>
-                      <td>{item.quantity_sold}</td>
-                      <td>{formatCurrency(item.revenue)}</td>
-                      <td>{formatCurrency(item.estimated_cost)}</td>
-                      <td>{formatCurrency(item.gross_profit)}</td>
-                      <td>{formatPercent(item.margin_percent)}</td>
-                    </tr>
-                  ))
+                  report.low_margin.map((item) => {
+                    const unitLabel = getUnitLabel(item.unit);
+                    return (
+                      <tr key={`margin-${item.product_id}-${item.product_name}`}>
+                        <td>{item.product_name}</td>
+                        <td>{item.category}</td>
+                        <td>
+                          {formatQty(item.quantity_sold, item.unit)}
+                          {unitLabel ? ` ${unitLabel}` : ''}
+                        </td>
+                        <td>{formatCurrency(item.revenue)}</td>
+                        <td>{formatCurrency(item.estimated_cost)}</td>
+                        <td>{formatCurrency(item.gross_profit)}</td>
+                        <td>{formatPercent(item.margin_percent)}</td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

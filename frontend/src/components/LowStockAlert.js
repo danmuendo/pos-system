@@ -72,7 +72,12 @@ function LowStockAlert({ token }) {
                   </div>
                 </td>
                 <td>
-                  <span className="stock-number">{product.stock_quantity}</span>
+                  <span className="stock-number">
+                    {Number(product.stock_quantity) % 1 === 0
+                      ? Number(product.stock_quantity)
+                      : Number(product.stock_quantity).toFixed(3).replace(/0+$/, '')}
+                    {product.unit && product.unit !== 'item' ? ` ${product.unit}` : ''}
+                  </span>
                 </td>
                 <td>
                   <span
