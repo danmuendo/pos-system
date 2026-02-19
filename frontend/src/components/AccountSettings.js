@@ -12,6 +12,7 @@ function AccountSettings({ token, user }) {
     new_password: '',
     confirm_password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [profileForm, setProfileForm] = useState({
     business_name: '',
     business_phone: '',
@@ -326,32 +327,46 @@ function AccountSettings({ token, user }) {
         <section className="settings-section">
           <h3>Password</h3>
           <form className="settings-form" onSubmit={handlePasswordSubmit}>
-            <input
-              type="password"
-              name="current_password"
-              placeholder="Current Password"
-              value={passwordForm.current_password}
-              onChange={handlePasswordChange}
-              required
-            />
-            <input
-              type="password"
-              name="new_password"
-              placeholder="New Password"
-              value={passwordForm.new_password}
-              onChange={handlePasswordChange}
-              minLength={6}
-              required
-            />
-            <input
-              type="password"
-              name="confirm_password"
-              placeholder="Confirm New Password"
-              value={passwordForm.confirm_password}
-              onChange={handlePasswordChange}
-              minLength={6}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="current_password"
+                placeholder="Current Password"
+                value={passwordForm.current_password}
+                onChange={handlePasswordChange}
+                required
+              />
+            </div>
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="new_password"
+                placeholder="New Password"
+                value={passwordForm.new_password}
+                onChange={handlePasswordChange}
+                minLength={6}
+                required
+              />
+            </div>
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="confirm_password"
+                placeholder="Confirm New Password"
+                value={passwordForm.confirm_password}
+                onChange={handlePasswordChange}
+                minLength={6}
+                required
+              />
+            </div>
+            <label className="show-password-label">
+              <input
+                type="checkbox"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+              />
+              Show passwords
+            </label>
             <button className="btn-primary" type="submit" disabled={changingPassword}>
               {changingPassword ? 'Updating...' : 'Change Password'}
             </button>

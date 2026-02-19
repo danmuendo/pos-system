@@ -11,6 +11,7 @@ function StaffManagement({ token }) {
     password: '',
     role: 'cashier',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,7 @@ function StaffManagement({ token }) {
 
   const resetForm = () => {
     setFormData({ username: '', password: '', role: 'cashier' });
+    setShowPassword(false);
     setEditingUserId(null);
   };
 
@@ -122,13 +124,23 @@ function StaffManagement({ token }) {
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           required
         />
-        <input
-          type="password"
-          placeholder={editingUserId ? 'New Password (optional)' : 'Temporary Password'}
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          required={!editingUserId}
-        />
+        <div className="password-input-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder={editingUserId ? 'New Password (optional)' : 'Temporary Password'}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required={!editingUserId}
+          />
+        </div>
+        <label className="show-password-label">
+          <input
+            type="checkbox"
+            checked={showPassword}
+            onChange={(e) => setShowPassword(e.target.checked)}
+          />
+          Show password
+        </label>
         <select
           value={formData.role}
           onChange={(e) => setFormData({ ...formData, role: e.target.value })}

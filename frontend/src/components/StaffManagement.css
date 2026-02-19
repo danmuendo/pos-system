@@ -69,3 +69,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.staff-form .password-input-wrapper {
+  position: relative;
+}
+
+.staff-form .password-input-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.staff-form .show-password-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.staff-form .show-password-label input[type="checkbox"] {
+  width: auto;
+}
