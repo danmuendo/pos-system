@@ -836,9 +836,65 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
       [req.scopeUserId, range.start, range.end]
     );
 
+    const summaryResult = await pool.query(
+      `SELECT
+         COUNT(DISTINCT ti.product_id) AS products_sold_count,
+         SUM(ti.quantity)::numeric AS total_quantity,
+         COALESCE(SUM(ti.subtotal), 0) AS total_revenue
+       FROM transaction_items ti
+       INNER JOIN transactions t ON t.id = ti.transaction_id
+       WHERE t.user_id = $1
+         AND t.transaction_type = 'sale'
+         AND t.status = 'completed'
+         AND t.completed_at >= $2
+         AND t.completed_at <= $3`,
+      [req.scopeUserId, range.start, range.end]
+    );
+
+    const missingCostResult = await pool.query(
+      `SELECT COUNT(DISTINCT ti.product_id) AS count
+       FROM transaction_items ti
+       INNER JOIN transactions t ON t.id = ti.transaction_id
+       LEFT JOIN products p ON p.id = ti.product_id AND p.user_id = t.user_id
+       WHERE t.user_id = $1
+         AND t.transaction_type = 'sale'
+         AND t.status = 'completed'
+         AND t.completed_at >= $2
+         AND t.completed_at <= $3
+         AND (p.cost_price IS NULL OR p.id IS NULL)`,
+      [req.scopeUserId, range.start, range.end]
+    );
+
+    const slowMoversResult = await pool.query(
+      `SELECT p.id, p.name, COALESCE(c.name, p.category) AS category,
+              p.stock_quantity, p.price, COALESCE(p.unit, 'item') AS unit
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       WHERE p.user_id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM transaction_items ti
+           INNER JOIN transactions t ON t.id = ti.transaction_id
+           WHERE ti.product_id = p.id
+             AND t.user_id = p.user_id
+             AND t.transaction_type = 'sale'
+             AND t.status = 'completed'
+             AND t.completed_at >= $2
+             AND t.completed_at <= $3
+         )
+       ORDER BY p.name ASC
+       LIMIT 50`,
+      [req.scopeUserId, range.start, range.end]
+    );
+
     res.json({
       date_from: range.start.toISOString().slice(0, 10),
       date_to: range.end.toISOString().slice(0, 10),
+      summary: {
+        products_sold_count: Number(summaryResult.rows[0]?.products_sold_count || 0),
+        total_quantity: Number(summaryResult.rows[0]?.total_quantity || 0),
+        total_revenue: Number(summaryResult.rows[0]?.total_revenue || 0),
+      },
+      missing_cost_price_count: Number(missingCostResult.rows[0]?.count || 0),
       top_selling: topSellingResult.rows.map((row) => ({
         product_id: row.product_id,
         product_name: row.product_name,
@@ -857,6 +913,14 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
         estimated_cost: Number(row.estimated_cost),
         gross_profit: Number(row.gross_profit),
         margin_percent: Number(row.margin_percent),
+        unit: row.unit || 'item',
+      })),
+      slow_movers: slowMoversResult.rows.map((row) => ({
+        product_id: row.id,
+        product_name: row.name,
+        category: row.category || '-',
+        stock_quantity: Number(row.stock_quantity || 0),
+        price: Number(row.price || 0),
         unit: row.unit || 'item',
       })),
     });
