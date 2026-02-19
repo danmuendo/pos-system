@@ -1,0 +1,83 @@
+.account-settings {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.account-settings h2 {
+  margin-bottom: 8px;
+}
+
+.account-help {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.settings-grid.single-column {
+  grid-template-columns: minmax(280px, 520px);
+  justify-content: center;
+}
+
+.settings-grid.single-column .settings-section {
+  width: 100%;
+}
+
+.settings-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.settings-section h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-form input,
+.settings-form textarea {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.settings-form textarea {
+  resize: vertical;
+}
+
+.settings-form input:focus,
+.settings-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.logo-upload-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.business-logo-preview {
+  width: 140px;
+  max-height: 80px;
+  object-fit: contain;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px;
+}

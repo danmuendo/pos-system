@@ -1,0 +1,71 @@
+.staff-management {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.staff-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 160px auto auto;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.staff-form input,
+.staff-form select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.staff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.staff-table th,
+.staff-table td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.staff-table th {
+  background: #f8f9fa;
+}
+
+.staff-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+@media (max-width: 900px) {
+  .staff-form {
+    grid-template-columns: 1fr;
+  }
+}
