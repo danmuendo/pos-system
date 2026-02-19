@@ -7,26 +7,24 @@ const path = require('path');
 const pool = require('../config/database');
 const { authMiddleware, requireRoles } = require('../middleware/auth');
 const { logAudit } = require('../services/audit');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const buildToken = (user) =>
-  jwt.sign(
-    {
-      userId: user.id,
-      username: user.username,
-      role: user.role,
-      ownerUserId: user.owner_user_id,
-    },
-    process.env.JWT_SECRET || 'your-secret-key',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
-  );
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const logoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `logo-${Date.now()}-${file.originalname}`);
-  },
+// Cloudinary storage for logo uploads
+const logoStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'pos_logos',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
+    transformation: [{ width: 400, height: 400, crop: 'limit' }]
+  }
 });
 
 const uploadLogo = multer({
@@ -466,7 +464,8 @@ router.post(
         return res.status(400).json({ error: 'No logo uploaded' });
       }
 
-      const logoUrl = `/uploads/${req.file.filename}`;
+      // Cloudinary returns the full URL in req.file.path
+      const logoUrl = req.file.path;
       await pool.query(
         'UPDATE users SET business_logo_url = $1 WHERE id = $2',
         [logoUrl, req.scopeUserId]
