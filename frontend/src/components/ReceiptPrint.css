@@ -83,6 +83,19 @@
   padding: 4px 2px;
 }
 
+.receipt-subtotal,
+.receipt-discount {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-top: 4px;
+  color: #555;
+}
+
+.receipt-discount {
+  color: #c0392b;
+}
+
 .receipt-total {
   display: flex;
   justify-content: space-between;

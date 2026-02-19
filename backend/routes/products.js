@@ -253,24 +253,78 @@ router.delete('/categories/:id', requireRoles('owner', 'admin'), async (req, res
   }
 });
 
-// Get low stock products
+// Get low stock products (uses per-product reorder_point, falls back to threshold param)
 router.get('/low-stock', async (req, res) => {
   try {
     const threshold = req.query.threshold || 10;
-    
+
     const result = await pool.query(
       `SELECT p.*, COALESCE(c.name, p.category) AS category
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
-       WHERE p.user_id = $1 AND p.stock_quantity <= $2
+       WHERE p.user_id = $1 AND p.stock_quantity <= COALESCE(p.reorder_point, $2)
        ORDER BY p.stock_quantity ASC`,
       [req.scopeUserId, threshold]
     );
-    
+
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching low stock products:', error);
     res.status(500).json({ error: 'Failed to fetch low stock products' });
+  }
+});
+
+// Manually adjust stock (add or remove)
+router.post('/:id/adjust-stock', requireRoles('owner', 'admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adjustment, reason } = req.body;
+
+    const adj = Number(adjustment);
+    if (isNaN(adj) || adj === 0) {
+      return res.status(400).json({ error: 'adjustment must be a non-zero number' });
+    }
+    if (!reason || !String(reason).trim()) {
+      return res.status(400).json({ error: 'reason is required' });
+    }
+
+    const productResult = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [id, req.scopeUserId]
+    );
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const product = productResult.rows[0];
+    const newQty = Number(product.stock_quantity) + adj;
+    if (newQty < 0) {
+      return res.status(400).json({
+        error: `Adjustment would result in negative stock (current: ${Number(product.stock_quantity)})`,
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE products SET stock_quantity = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND user_id = $3 RETURNING *`,
+      [newQty, id, req.scopeUserId]
+    );
+
+    await logAudit({
+      actorUserId: req.userId,
+      scopeUserId: req.scopeUserId,
+      action: 'adjust_stock',
+      entityType: 'product',
+      entityId: id,
+      oldValues: { stock_quantity: product.stock_quantity },
+      newValues: { stock_quantity: newQty },
+      reason: String(reason).trim(),
+    });
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adjusting stock:', error);
+    res.status(500).json({ error: 'Failed to adjust stock' });
   }
 });
 

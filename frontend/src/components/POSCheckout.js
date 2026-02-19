@@ -30,6 +30,8 @@ function POSCheckout({ token }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [scanCode, setScanCode] = useState('');
+  const [discountType, setDiscountType] = useState('percent');
+  const [discountValue, setDiscountValue] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -122,9 +124,18 @@ function POSCheckout({ token }) {
     setCart(cart.filter((item) => item.product_id !== productId));
   };
 
-  const getTotalAmount = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const getSubtotal = () =>
+    cart.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  const getDiscountAmount = () => {
+    const subtotal = getSubtotal();
+    const val = Number(discountValue) || 0;
+    if (val <= 0) return 0;
+    if (discountType === 'percent') return Math.min((subtotal * val) / 100, subtotal);
+    return Math.min(val, subtotal);
   };
+
+  const getTotalAmount = () => getSubtotal() - getDiscountAmount();
 
   const openReceipt = (transactionId) => {
     if (!transactionId) return;
@@ -152,6 +163,7 @@ function POSCheckout({ token }) {
           customer_phone: paymentMethod === 'mpesa' ? customerPhone : '',
           payment_method: paymentMethod,
           items: cart,
+          discount_amount: getDiscountAmount(),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -178,6 +190,7 @@ function POSCheckout({ token }) {
       setTimeout(() => {
         setCart([]);
         setCustomerPhone('');
+        setDiscountValue('');
         setMessage({ type: '', text: '' });
       }, clearDelayMs);
     } catch (error) {
@@ -369,6 +382,40 @@ function POSCheckout({ token }) {
             </div>
 
             <div className="cart-total">
+              <div className="discount-row">
+                <select
+                  value={discountType}
+                  onChange={(e) => setDiscountType(e.target.value)}
+                  className="discount-type-select"
+                >
+                  <option value="percent">% Discount</option>
+                  <option value="fixed">Fixed (KSh)</option>
+                </select>
+                <input
+                  type="number"
+                  min="0"
+                  step={discountType === 'percent' ? '1' : '0.01'}
+                  max={discountType === 'percent' ? '100' : undefined}
+                  placeholder={discountType === 'percent' ? 'e.g. 10' : 'e.g. 50'}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="discount-input"
+                />
+              </div>
+              {getDiscountAmount() > 0 && (
+                <div className="subtotal-line">
+                  <span>Subtotal:</span>
+                  <span>KSh {getSubtotal().toFixed(2)}</span>
+                </div>
+              )}
+              {getDiscountAmount() > 0 && (
+                <div className="discount-line">
+                  <span>
+                    Discount{discountType === 'percent' ? ` (${discountValue}%)` : ''}:
+                  </span>
+                  <span>-KSh {getDiscountAmount().toFixed(2)}</span>
+                </div>
+              )}
               <h3>Total: KSh {getTotalAmount().toFixed(2)}</h3>
             </div>
 

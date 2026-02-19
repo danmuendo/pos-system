@@ -252,6 +252,44 @@
 .cart-total h3 {
   font-size: 20px;
   color: #333;
+  margin-top: 8px;
+}
+
+.discount-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.discount-type-select {
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 13px;
+  background: white;
+  flex-shrink: 0;
+}
+
+.discount-input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.subtotal-line,
+.discount-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 3px 0;
+  color: #555;
+}
+
+.discount-line {
+  color: #e74c3c;
+  font-weight: 500;
 }
 
 .checkout-form {

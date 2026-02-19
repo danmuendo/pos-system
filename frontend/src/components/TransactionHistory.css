@@ -1,3 +1,106 @@
+.th-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.th-header h2 {
+  margin-bottom: 0;
+}
+
+.btn-export {
+  background: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-export:hover {
+  background: #218838;
+}
+
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 13px;
+  background: white;
+}
+
+.btn-apply-filter {
+  background: #667eea;
+  color: white;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  align-self: flex-end;
+  transition: background 0.2s;
+}
+
+.btn-apply-filter:hover {
+  background: #5a6fd6;
+}
+
+.btn-clear-filter {
+  background: #6c757d;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 5px;
+  font-size: 13px;
+  align-self: flex-end;
+  transition: background 0.2s;
+}
+
+.btn-clear-filter:hover {
+  background: #545b62;
+}
+
+.results-count {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.discount-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  color: #e74c3c;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
 .transaction-history {
   background: white;
   border-radius: 10px;

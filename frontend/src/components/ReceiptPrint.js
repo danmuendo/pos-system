@@ -167,6 +167,18 @@ function ReceiptPrint({ token }) {
 
         <hr />
 
+        {Number(receipt.discount_amount) > 0 && (
+          <>
+            <div className="receipt-subtotal">
+              <span>Subtotal</span>
+              <span>{formatCurrency(receipt.total_amount + receipt.discount_amount)}</span>
+            </div>
+            <div className="receipt-discount">
+              <span>Discount</span>
+              <span>-{formatCurrency(receipt.discount_amount)}</span>
+            </div>
+          </>
+        )}
         <div className="receipt-total">
           <strong>Total</strong>
           <strong>{formatCurrency(receipt.total_amount)}</strong>

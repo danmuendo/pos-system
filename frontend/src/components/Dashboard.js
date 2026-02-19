@@ -7,6 +7,7 @@ import ShiftCloseReport from './ShiftCloseReport';
 import ProductPerformanceReport from './ProductPerformanceReport';
 import StaffManagement from './StaffManagement';
 import AccountSettings from './AccountSettings';
+import TodayStats from './TodayStats';
 import './Dashboard.css';
 
 function Dashboard({ user, token, onLogout }) {
@@ -78,6 +79,9 @@ function Dashboard({ user, token, onLogout }) {
           Account
         </button>
       </nav>
+
+      {/* Today's stats bar — owner/admin only */}
+      {canManage && <TodayStats token={token} />}
 
       <main className="dashboard-content">
         {/* Low Stock Alert - Shows on all tabs */}

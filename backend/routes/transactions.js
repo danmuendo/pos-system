@@ -53,6 +53,7 @@ const buildReceiptData = async (transactionId, scopeUserId) => {
        t.transaction_code,
        t.customer_phone,
        t.total_amount,
+       t.discount_amount,
        t.status,
        t.payment_method,
        t.transaction_type,
@@ -112,6 +113,7 @@ const buildReceiptData = async (transactionId, scopeUserId) => {
     receipt_footer: transaction.receipt_footer,
     cashier_name: transaction.cashier_username || 'system',
     total_amount: Number(transaction.total_amount),
+    discount_amount: Number(transaction.discount_amount || 0),
     items: items.map((item) => ({
       product_name: item.product_name,
       quantity: Number(item.quantity),
@@ -127,7 +129,7 @@ router.post('/checkout', async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const { customer_phone, items, payment_method = 'mpesa' } = req.body;
+    const { customer_phone, items, payment_method = 'mpesa', discount_amount = 0 } = req.body;
     const normalizedPaymentMethod = String(payment_method).toLowerCase();
 
     if (!['mpesa', 'cash'].includes(normalizedPaymentMethod)) {
@@ -181,20 +183,24 @@ router.post('/checkout', async (req, res) => {
       });
     }
 
+    const discountAmt = Math.max(0, Math.min(Number(discount_amount) || 0, totalAmount));
+    const finalAmount = totalAmount - discountAmt;
+
     const transactionCode =
       'TXN' + Date.now() + Math.random().toString(36).substring(7).toUpperCase();
 
     const transactionResult = await client.query(
       `INSERT INTO transactions (
-         transaction_code, customer_phone, total_amount, status, user_id,
+         transaction_code, customer_phone, total_amount, discount_amount, status, user_id,
          created_by_user_id, transaction_type, payment_method
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         transactionCode,
         normalizedPaymentMethod === 'cash' ? 'CASH' : customer_phone,
-        totalAmount,
+        finalAmount,
+        discountAmt,
         normalizedPaymentMethod === 'cash' ? 'completed' : 'pending',
         req.scopeUserId,
         req.userId,
@@ -247,7 +253,8 @@ router.post('/checkout', async (req, res) => {
         newValues: {
           transaction_code: transactionCode,
           status: 'completed',
-          total_amount: totalAmount,
+          total_amount: finalAmount,
+          discount_amount: discountAmt,
           transaction_type: 'sale',
           payment_method: 'cash',
         },
@@ -257,7 +264,8 @@ router.post('/checkout', async (req, res) => {
         success: true,
         transaction_id: transaction.id,
         transaction_code: transactionCode,
-        total_amount: totalAmount,
+        total_amount: finalAmount,
+        discount_amount: discountAmt,
         payment_method: 'cash',
         message: 'Cash sale completed',
       });
@@ -282,7 +290,8 @@ router.post('/checkout', async (req, res) => {
         newValues: {
           transaction_code: transactionCode,
           status: 'pending',
-          total_amount: totalAmount,
+          total_amount: finalAmount,
+          discount_amount: discountAmt,
           transaction_type: 'sale',
           payment_method: 'mpesa',
         },
@@ -292,7 +301,8 @@ router.post('/checkout', async (req, res) => {
         success: true,
         transaction_id: transaction.id,
         transaction_code: transactionCode,
-        total_amount: totalAmount,
+        total_amount: finalAmount,
+        discount_amount: discountAmt,
         payment_method: 'mpesa',
         mpesa_response: mpesaResponse,
         message: 'Payment prompt sent to customer phone',
@@ -856,11 +866,72 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
   }
 });
 
-// Get transaction history
+// Today's sales summary (owner/admin)
+router.get('/reports/today-summary', requireRoles('owner', 'admin'), async (req, res) => {
+  try {
+    const range = getDayRange(null);
+    const result = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE transaction_type = 'sale' AND status = 'completed') AS sales_count,
+         COALESCE(SUM(total_amount) FILTER (WHERE transaction_type = 'sale' AND status = 'completed'), 0) AS total_sales,
+         COALESCE(SUM(total_amount) FILTER (WHERE transaction_type = 'sale' AND status = 'completed' AND payment_method = 'cash'), 0) AS cash_total,
+         COALESCE(SUM(total_amount) FILTER (WHERE transaction_type = 'sale' AND status = 'completed' AND payment_method = 'mpesa'), 0) AS mpesa_total,
+         COUNT(*) FILTER (WHERE status = 'pending') AS pending_count,
+         COUNT(*) FILTER (WHERE transaction_type = 'void') AS void_count,
+         COUNT(*) FILTER (WHERE transaction_type = 'refund') AS refund_count
+       FROM transactions
+       WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3`,
+      [req.scopeUserId, range.start, range.end]
+    );
+    const row = result.rows[0];
+    res.json({
+      date: range.start.toISOString().slice(0, 10),
+      sales_count: Number(row.sales_count),
+      total_sales: Number(row.total_sales),
+      cash_total: Number(row.cash_total),
+      mpesa_total: Number(row.mpesa_total),
+      pending_count: Number(row.pending_count),
+      void_count: Number(row.void_count),
+      refund_count: Number(row.refund_count),
+    });
+  } catch (error) {
+    console.error('Today summary error:', error);
+    res.status(500).json({ error: 'Failed to fetch today summary' });
+  }
+});
+
+// Get transaction history (with optional filters)
 router.get('/', async (req, res) => {
   try {
+    const { payment_method, status, date_from, date_to } = req.query;
+
+    const conditions = ['t.user_id = $1'];
+    const params = [req.scopeUserId];
+    let idx = 2;
+
+    if (payment_method) {
+      conditions.push(`t.payment_method = $${idx++}`);
+      params.push(payment_method);
+    }
+    if (status) {
+      conditions.push(`t.status = $${idx++}`);
+      params.push(status);
+    }
+    if (date_from) {
+      const d = new Date(date_from);
+      d.setHours(0, 0, 0, 0);
+      conditions.push(`t.created_at >= $${idx++}`);
+      params.push(d);
+    }
+    if (date_to) {
+      const d = new Date(date_to);
+      d.setHours(23, 59, 59, 999);
+      conditions.push(`t.created_at <= $${idx++}`);
+      params.push(d);
+    }
+
     const result = await pool.query(
-      `SELECT t.*,
+      `SELECT t.*, u.username AS cashier_name,
               json_agg(
                 json_build_object(
                   'product_name', ti.product_name,
@@ -872,11 +943,12 @@ router.get('/', async (req, res) => {
               ) AS items
        FROM transactions t
        LEFT JOIN transaction_items ti ON t.id = ti.transaction_id
-       WHERE t.user_id = $1
-       GROUP BY t.id
+       LEFT JOIN users u ON u.id = t.created_by_user_id
+       WHERE ${conditions.join(' AND ')}
+       GROUP BY t.id, u.username
        ORDER BY t.created_at DESC
-       LIMIT 100`,
-      [req.scopeUserId]
+       LIMIT 200`,
+      params
     );
 
     res.json(result.rows);

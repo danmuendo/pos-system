@@ -16,6 +16,7 @@ function ProductManagement({ token, user }) {
     price: '',
     cost_price: '',
     stock_quantity: '',
+    reorder_point: '',
     unit: 'item',
     category_id: '',
     image_url: '',
@@ -26,6 +27,9 @@ function ProductManagement({ token, user }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [adjustingProduct, setAdjustingProduct] = useState(null);
+  const [adjustmentData, setAdjustmentData] = useState({ adjustment: '', reason: '' });
+  const [adjusting, setAdjusting] = useState(false);
   const canManageProducts = user?.role === 'owner' || user?.role === 'admin';
 
   useEffect(() => {
@@ -132,6 +136,7 @@ function ProductManagement({ token, user }) {
       const productData = {
         ...formData,
         category_id: formData.category_id || null,
+        reorder_point: formData.reorder_point !== '' ? Number(formData.reorder_point) : null,
         image_url: imageUrl,
       };
 
@@ -160,6 +165,34 @@ function ProductManagement({ token, user }) {
     }
   };
 
+  const handleAdjustStock = async () => {
+    const adj = Number(adjustmentData.adjustment);
+    if (!adjustmentData.adjustment || isNaN(adj) || adj === 0) {
+      setMessage({ type: 'error', text: 'Enter a non-zero adjustment amount' });
+      return;
+    }
+    if (!adjustmentData.reason.trim()) {
+      setMessage({ type: 'error', text: 'Reason is required' });
+      return;
+    }
+    setAdjusting(true);
+    try {
+      await axios.post(
+        `${API_URL}/products/${adjustingProduct.id}/adjust-stock`,
+        { adjustment: adj, reason: adjustmentData.reason.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage({ type: 'success', text: `Stock adjusted for ${adjustingProduct.name}` });
+      setAdjustingProduct(null);
+      setAdjustmentData({ adjustment: '', reason: '' });
+      fetchProducts();
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to adjust stock' });
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -169,6 +202,7 @@ function ProductManagement({ token, user }) {
       price: product.price,
       cost_price: product.cost_price || '',
       stock_quantity: product.stock_quantity,
+      reorder_point: product.reorder_point != null ? String(product.reorder_point) : '',
       unit: product.unit || 'item',
       category_id: product.category_id ? String(product.category_id) : '',
       image_url: product.image_url || '',
@@ -210,6 +244,7 @@ function ProductManagement({ token, user }) {
       price: '',
       cost_price: '',
       stock_quantity: '',
+      reorder_point: '',
       unit: 'item',
       category_id: '',
       image_url: '',
@@ -371,6 +406,18 @@ function ProductManagement({ token, user }) {
             />
           </div>
 
+          <div className="form-row">
+            <input
+              type="number"
+              name="reorder_point"
+              placeholder="Low stock alert threshold (optional, default 10)"
+              value={formData.reorder_point}
+              onChange={handleChange}
+              min="0"
+              step="1"
+            />
+          </div>
+
           <div className="form-actions">
             <button type="submit" className="btn-primary" disabled={uploading}>
               {uploading ? 'Uploading...' : editingProduct ? 'Update Product' : 'Add Product'}
@@ -438,16 +485,19 @@ function ProductManagement({ token, user }) {
                 <td>
                   {canManageProducts ? (
                     <>
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="btn-edit"
-                      >
+                      <button onClick={() => handleEdit(product)} className="btn-edit">
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(product.id)}
-                        className="btn-delete"
+                        onClick={() => {
+                          setAdjustingProduct(product);
+                          setAdjustmentData({ adjustment: '', reason: '' });
+                        }}
+                        className="btn-adjust"
                       >
+                        Adjust Stock
+                      </button>
+                      <button onClick={() => handleDelete(product.id)} className="btn-delete">
                         Delete
                       </button>
                     </>
@@ -460,6 +510,65 @@ function ProductManagement({ token, user }) {
           </tbody>
         </table>
       </div>
+
+      {/* Stock Adjustment Modal */}
+      {adjustingProduct && (
+        <div className="modal-overlay" onClick={() => setAdjustingProduct(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Adjust Stock — {adjustingProduct.name}</h3>
+              <button className="close-btn" onClick={() => setAdjustingProduct(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="current-stock">
+                Current stock:{' '}
+                <strong>
+                  {Number(adjustingProduct.stock_quantity) % 1 === 0
+                    ? Number(adjustingProduct.stock_quantity)
+                    : Number(adjustingProduct.stock_quantity).toFixed(3).replace(/0+$/, '')}
+                  {adjustingProduct.unit && adjustingProduct.unit !== 'item' ? ` ${adjustingProduct.unit}` : ''}
+                </strong>
+              </p>
+              <div className="form-row">
+                <input
+                  type="number"
+                  placeholder="Adjustment (e.g. +20 to add, -5 to remove)"
+                  value={adjustmentData.adjustment}
+                  onChange={(e) => setAdjustmentData((prev) => ({ ...prev, adjustment: e.target.value }))}
+                  step={adjustingProduct.unit === 'item' ? '1' : '0.001'}
+                />
+              </div>
+              <div className="form-row">
+                <input
+                  type="text"
+                  placeholder="Reason (e.g. new stock received, damaged goods)"
+                  value={adjustmentData.reason}
+                  onChange={(e) => setAdjustmentData((prev) => ({ ...prev, reason: e.target.value }))}
+                />
+              </div>
+              {adjustmentData.adjustment !== '' && !isNaN(Number(adjustmentData.adjustment)) && (
+                <p className="adjustment-preview">
+                  New stock will be:{' '}
+                  <strong>
+                    {(Number(adjustingProduct.stock_quantity) + Number(adjustmentData.adjustment)).toFixed(
+                      adjustingProduct.unit === 'item' ? 0 : 3
+                    ).replace(/\.?0+$/, '')}
+                    {adjustingProduct.unit && adjustingProduct.unit !== 'item' ? ` ${adjustingProduct.unit}` : ''}
+                  </strong>
+                </p>
+              )}
+              <div className="form-actions">
+                <button className="btn-primary" onClick={handleAdjustStock} disabled={adjusting}>
+                  {adjusting ? 'Saving...' : 'Save Adjustment'}
+                </button>
+                <button className="btn-secondary" onClick={() => setAdjustingProduct(null)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
