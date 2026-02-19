@@ -42,6 +42,18 @@ const uploadLogo = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+const buildToken = (user) =>
+  jwt.sign(
+    {
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+      ownerUserId: user.owner_user_id,
+    },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+  );
+
 // Register new user
 router.post('/register', async (req, res) => {
   try {
