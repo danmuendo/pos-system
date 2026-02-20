@@ -13,4 +13,8 @@ dist/
 
 # Logs and OS files
 *.log
-.DS_Store"*.zip" 
+.DS_Store
+*.zip
+
+# Claude Code
+.claude/
