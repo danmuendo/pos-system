@@ -455,7 +455,7 @@ router.post('/:id/complete', async (req, res) => {
 });
 
 // Void transaction with reason and stock reversal
-router.post('/:id/void', requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/:id/void', requireRoles('owner', 'manager'), async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -565,7 +565,7 @@ router.post('/:id/void', requireRoles('owner', 'admin'), async (req, res) => {
 });
 
 // Refund transaction with reason and stock reversal
-router.post('/:id/refund', requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/:id/refund', requireRoles('owner', 'manager'), async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -675,7 +675,7 @@ router.post('/:id/refund', requireRoles('owner', 'admin'), async (req, res) => {
 });
 
 // Shift close report
-router.get('/reports/shift-close', requireRoles('owner', 'admin'), async (req, res) => {
+router.get('/reports/shift-close', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const range = getDayRange(req.query.date);
     if (!range) {
@@ -768,7 +768,7 @@ router.get('/reports/shift-close', requireRoles('owner', 'admin'), async (req, r
 });
 
 // Product performance report (top-selling and low-margin)
-router.get('/reports/product-performance', requireRoles('owner', 'admin'), async (req, res) => {
+router.get('/reports/product-performance', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const range = getDateWindow(req.query.date_from, req.query.date_to);
     if (!range) {
@@ -931,7 +931,7 @@ router.get('/reports/product-performance', requireRoles('owner', 'admin'), async
 });
 
 // Today's sales summary (owner/admin)
-router.get('/reports/today-summary', requireRoles('owner', 'admin'), async (req, res) => {
+router.get('/reports/today-summary', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const range = getDayRange(null);
     const result = await pool.query(

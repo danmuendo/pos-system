@@ -147,7 +147,7 @@ function StaffManagement({ token, user }) {
           onChange={(e) => setFormData({ ...formData, role: e.target.value })}
         >
           <option value="cashier">Cashier</option>
-          {isOwner && <option value="admin">Admin</option>}
+          {isOwner && <option value="manager">Manager</option>}
         </select>
         <button className="btn-primary" type="submit" disabled={loading}>
           {loading ? 'Saving...' : editingUserId ? 'Update Staff Account' : 'Create Staff Account'}
@@ -179,7 +179,7 @@ function StaffManagement({ token, user }) {
               <td>{member.role}</td>
               <td>{new Date(member.created_at).toLocaleString()}</td>
               <td className="staff-actions">
-                {(isOwner || member.role !== 'admin') && (
+                {(isOwner || member.role !== 'manager') && (
                   <button
                     className="btn-edit"
                     type="button"
@@ -188,7 +188,7 @@ function StaffManagement({ token, user }) {
                     Edit
                   </button>
                 )}
-                {(isOwner || member.role !== 'admin') && (
+                {(isOwner || member.role !== 'manager') && (
                   <button
                     className="btn-delete"
                     type="button"

@@ -30,7 +30,7 @@ function ProductManagement({ token, user }) {
   const [adjustingProduct, setAdjustingProduct] = useState(null);
   const [adjustmentData, setAdjustmentData] = useState({ adjustment: '', reason: '' });
   const [adjusting, setAdjusting] = useState(false);
-  const canManageProducts = user?.role === 'owner' || user?.role === 'admin';
+  const canManageProducts = user?.role === 'owner' || user?.role === 'manager';
 
   useEffect(() => {
     fetchProducts();

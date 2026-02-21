@@ -79,7 +79,7 @@ const resolveCategory = async (client, scopeUserId, categoryId, categoryNameInpu
 // --- ROUTES ---
 
 // Upload product image to Cloudinary
-router.post('/upload-image', requireRoles('owner', 'admin'), upload.single('image'), (req, res) => {
+router.post('/upload-image', requireRoles('owner', 'manager'), upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
@@ -115,7 +115,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // Create category
-router.post('/categories', requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/categories', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const name = normalizeCategoryName(req.body.name);
     if (!name) {
@@ -153,7 +153,7 @@ router.post('/categories', requireRoles('owner', 'admin'), async (req, res) => {
 });
 
 // Update category
-router.put('/categories/:id', requireRoles('owner', 'admin'), async (req, res) => {
+router.put('/categories/:id', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
     const name = normalizeCategoryName(req.body.name);
@@ -214,7 +214,7 @@ router.put('/categories/:id', requireRoles('owner', 'admin'), async (req, res) =
 });
 
 // Delete category
-router.delete('/categories/:id', requireRoles('owner', 'admin'), async (req, res) => {
+router.delete('/categories/:id', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -275,7 +275,7 @@ router.get('/low-stock', async (req, res) => {
 });
 
 // Manually adjust stock (add or remove)
-router.post('/:id/adjust-stock', requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/:id/adjust-stock', requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
     const { adjustment, reason } = req.body;
@@ -347,7 +347,7 @@ router.get('/', async (req, res) => {
 });
 
 // Add new product
-router.post('/', requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/', requireRoles('owner', 'manager'), async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -411,7 +411,7 @@ router.post('/', requireRoles('owner', 'admin'), async (req, res) => {
 });
 
 // Update product
-router.put('/:id', requireRoles('owner', 'admin'), async (req, res) => {
+router.put('/:id', requireRoles('owner', 'manager'), async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;

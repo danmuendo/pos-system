@@ -68,7 +68,7 @@ router.post('/register', async (req, res) => {
     const totalUsers = usersCountResult.rows[0]?.total || 0;
     if (totalUsers > 0) {
       return res.status(403).json({
-        error: 'Registration is disabled. Ask your admin to create your account.',
+        error: 'Registration is disabled. Ask your manager to create your account.',
       });
     }
     
@@ -91,7 +91,7 @@ router.post('/register', async (req, res) => {
       `INSERT INTO users (username, password_hash, business_name, role, owner_user_id)
        VALUES ($1, $2, $3, $4, NULL)
        RETURNING id, username, business_name, role, owner_user_id`,
-      [username, passwordHash, business_name, 'admin']
+      [username, passwordHash, business_name, 'owner']
     );
 
     const createdUser = result.rows[0];
@@ -168,7 +168,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Create employee account under owner scope
-router.post('/users', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.post('/users', authMiddleware, requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { username, password, role = 'cashier' } = req.body;
 
@@ -176,13 +176,13 @@ router.post('/users', authMiddleware, requireRoles('owner', 'admin'), async (req
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    if (!['cashier', 'admin'].includes(role)) {
-      return res.status(400).json({ error: 'Role must be cashier or admin' });
+    if (!['cashier', 'manager'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be cashier or manager' });
     }
 
-    // Admin can only create cashier accounts; only owner can create admin accounts
-    if (role === 'admin' && req.role !== 'owner') {
-      return res.status(403).json({ error: 'Only the owner can create admin accounts' });
+    // Manager can only create cashier accounts; only owner can create manager accounts
+    if (role === 'manager' && req.role !== 'owner') {
+      return res.status(403).json({ error: 'Only the owner can create manager accounts' });
     }
 
     const existingUser = await pool.query(
@@ -230,7 +230,7 @@ router.post('/users', authMiddleware, requireRoles('owner', 'admin'), async (req
   }
 });
 
-router.get('/users', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.get('/users', authMiddleware, requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, username, role, created_at, owner_user_id
@@ -246,7 +246,7 @@ router.get('/users', authMiddleware, requireRoles('owner', 'admin'), async (req,
   }
 });
 
-router.put('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.put('/users/:id', authMiddleware, requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
     const { username, role, password } = req.body;
@@ -267,12 +267,12 @@ router.put('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (
       return res.status(400).json({ error: 'You cannot change your own role' });
     }
 
-    // Admin cannot edit admin accounts
-    if (req.role === 'admin' && targetUser.role === 'admin') {
-      return res.status(403).json({ error: 'Admins cannot edit other admin accounts' });
+    // Manager cannot edit manager accounts
+    if (req.role === 'manager' && targetUser.role === 'manager') {
+      return res.status(403).json({ error: 'Managers cannot edit other manager accounts' });
     }
 
-    if (role && !['cashier', 'admin', 'owner'].includes(role)) {
+    if (role && !['cashier', 'manager', 'owner'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
 
@@ -280,9 +280,9 @@ router.put('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (
       return res.status(403).json({ error: 'Only owner can assign owner role' });
     }
 
-    // Admin cannot promote anyone to admin
-    if (role === 'admin' && req.role !== 'owner') {
-      return res.status(403).json({ error: 'Only the owner can assign admin role' });
+    // Manager cannot promote anyone to manager
+    if (role === 'manager' && req.role !== 'owner') {
+      return res.status(403).json({ error: 'Only the owner can assign manager role' });
     }
 
     if (username && username !== targetUser.username) {
@@ -350,7 +350,7 @@ router.put('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (
   }
 });
 
-router.delete('/users/:id', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.delete('/users/:id', authMiddleware, requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -374,9 +374,9 @@ router.delete('/users/:id', authMiddleware, requireRoles('owner', 'admin'), asyn
       return res.status(403).json({ error: 'Only owner can delete owner account' });
     }
 
-    // Admin cannot delete admin accounts
-    if (req.role === 'admin' && targetUser.role === 'admin') {
-      return res.status(403).json({ error: 'Admins cannot delete other admin accounts' });
+    // Manager cannot delete manager accounts
+    if (req.role === 'manager' && targetUser.role === 'manager') {
+      return res.status(403).json({ error: 'Managers cannot delete other manager accounts' });
     }
 
     await pool.query(
@@ -401,7 +401,7 @@ router.delete('/users/:id', authMiddleware, requireRoles('owner', 'admin'), asyn
   }
 });
 
-router.get('/business-profile', authMiddleware, requireRoles('owner', 'admin'), async (req, res) => {
+router.get('/business-profile', authMiddleware, requireRoles('owner', 'manager'), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT business_name, business_phone, business_address, business_tax_pin, business_logo_url, receipt_footer

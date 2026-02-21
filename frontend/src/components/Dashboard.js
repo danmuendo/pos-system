@@ -11,8 +11,8 @@ import './Dashboard.css';
 
 function Dashboard({ user, token, onLogout }) {
   const [activeTab, setActiveTab] = useState('pos');
-  const canManage = user?.role === 'owner' || user?.role === 'admin';
-  const canManageUsers = user?.role === 'owner' || user?.role === 'admin';
+  const canManage = user?.role === 'owner' || user?.role === 'manager';
+  const canManageUsers = user?.role === 'owner' || user?.role === 'manager';
 
   return (
     <div className="dashboard">

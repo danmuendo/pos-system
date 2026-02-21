@@ -15,7 +15,7 @@ function TransactionHistory({ token, user }) {
     payment_method: '',
     status: '',
   });
-  const canReverseTransactions = user?.role === 'owner' || user?.role === 'admin';
+  const canReverseTransactions = user?.role === 'owner' || user?.role === 'manager';
 
   const fetchTransactions = useCallback(async (activeFilters) => {
     try {
