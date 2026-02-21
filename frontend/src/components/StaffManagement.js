@@ -179,7 +179,7 @@ function StaffManagement({ token, user }) {
               <td>{member.role}</td>
               <td>{new Date(member.created_at).toLocaleString()}</td>
               <td className="staff-actions">
-                {(isOwner || member.role !== 'manager') && (
+                {(isOwner || member.role === 'cashier') && (
                   <button
                     className="btn-edit"
                     type="button"
@@ -188,7 +188,7 @@ function StaffManagement({ token, user }) {
                     Edit
                   </button>
                 )}
-                {(isOwner || member.role !== 'manager') && (
+                {(isOwner || member.role === 'cashier') && (
                   <button
                     className="btn-delete"
                     type="button"

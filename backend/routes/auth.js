@@ -267,9 +267,9 @@ router.put('/users/:id', authMiddleware, requireRoles('owner', 'manager'), async
       return res.status(400).json({ error: 'You cannot change your own role' });
     }
 
-    // Manager cannot edit manager accounts
-    if (req.role === 'manager' && targetUser.role === 'manager') {
-      return res.status(403).json({ error: 'Managers cannot edit other manager accounts' });
+    // Manager cannot edit manager or owner accounts
+    if (req.role === 'manager' && (targetUser.role === 'manager' || targetUser.role === 'owner')) {
+      return res.status(403).json({ error: 'Managers can only edit cashier accounts' });
     }
 
     if (role && !['cashier', 'manager', 'owner'].includes(role)) {
