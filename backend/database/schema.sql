@@ -33,6 +33,7 @@ CREATE TABLE products (
     price DECIMAL(10, 2) NOT NULL,
     cost_price DECIMAL(10, 2),
     stock_quantity DECIMAL(10, 3) DEFAULT 0,
+    reorder_point INTEGER DEFAULT NULL,
     unit VARCHAR(20) NOT NULL DEFAULT 'item',
     category VARCHAR(100),
     category_id INTEGER REFERENCES categories(id),

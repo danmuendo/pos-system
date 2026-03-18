@@ -357,6 +357,7 @@ router.post('/', requireRoles('owner', 'manager'), async (req, res) => {
       price,
       cost_price,
       stock_quantity,
+      reorder_point,
       unit,
       category,
       category_id,
@@ -371,8 +372,8 @@ router.post('/', requireRoles('owner', 'manager'), async (req, res) => {
 
     const result = await client.query(
       `INSERT INTO products (
-         name, barcode, description, price, cost_price, stock_quantity, unit, category, category_id, image_url, user_id
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         name, barcode, description, price, cost_price, stock_quantity, reorder_point, unit, category, category_id, image_url, user_id
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         name,
@@ -381,6 +382,7 @@ router.post('/', requireRoles('owner', 'manager'), async (req, res) => {
         price,
         cost_price || null,
         stock_quantity || 0,
+        reorder_point ?? null,
         normalizedUnit,
         resolvedCategory.category,
         resolvedCategory.category_id,
@@ -422,6 +424,7 @@ router.put('/:id', requireRoles('owner', 'manager'), async (req, res) => {
       price,
       cost_price,
       stock_quantity,
+      reorder_point,
       unit,
       category,
       category_id,
@@ -444,9 +447,10 @@ router.put('/:id', requireRoles('owner', 'manager'), async (req, res) => {
 
     const result = await client.query(
       `UPDATE products 
-       SET name = $1, barcode = $2, description = $3, price = $4, cost_price = $5, stock_quantity = $6, 
-           unit = $7, category = $8, category_id = $9, image_url = $10, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $11 AND user_id = $12 RETURNING *`,
+       SET name = $1, barcode = $2, description = $3, price = $4, cost_price = $5, stock_quantity = $6,
+           reorder_point = $7, unit = $8, category = $9, category_id = $10, image_url = $11,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $12 AND user_id = $13 RETURNING *`,
       [
         name,
         normalizedBarcode,
@@ -454,6 +458,7 @@ router.put('/:id', requireRoles('owner', 'manager'), async (req, res) => {
         price,
         cost_price || null,
         stock_quantity,
+        reorder_point ?? null,
         normalizedUnit,
         resolvedCategory.category,
         resolvedCategory.category_id,
