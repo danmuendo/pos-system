@@ -95,3 +95,23 @@
   width: auto;
   accent-color: var(--accent);
 }
+
+@media (max-width: 760px) {
+  .account-settings {
+    padding: 18px;
+  }
+
+  .settings-grid,
+  .settings-grid.single-column {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-section {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .business-logo-preview {
+    width: 132px;
+  }
+}

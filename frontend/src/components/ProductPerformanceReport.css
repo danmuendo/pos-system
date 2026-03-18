@@ -111,6 +111,7 @@
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid var(--line);
+  min-width: 700px;
 }
 
 .report-section th,
@@ -191,9 +192,27 @@
 }
 
 @media (max-width: 760px) {
+  .product-performance-report {
+    padding: 18px;
+  }
+
   .report-header-row,
   .report-controls-bar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .report-controls-bar {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .report-section {
+    overflow-x: auto;
+    margin-right: -4px;
   }
 }

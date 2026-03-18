@@ -100,6 +100,7 @@
   width: 100%;
   border-collapse: collapse;
   background: rgba(255, 251, 245, 0.74);
+  min-width: 920px;
 }
 
 .transactions-table thead {
@@ -250,6 +251,7 @@
   margin-bottom: 16px;
   border-radius: 20px;
   overflow: hidden;
+  min-width: 520px;
 }
 
 .items-table th {
@@ -283,6 +285,10 @@
 .btn-refund { background: #1b5377; color: #fff; }
 
 @media (max-width: 760px) {
+  .transaction-history {
+    padding: 18px;
+  }
+
   .th-header {
     flex-direction: column;
     align-items: stretch;
@@ -291,6 +297,24 @@
   .filters-bar {
     flex-direction: column;
     align-items: stretch;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .transactions-table {
+    margin: 0 -4px;
+  }
+
+  .modal-content {
+    width: calc(100vw - 20px);
+    max-height: 88vh;
+    border-radius: 22px;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .detail-row,
@@ -301,5 +325,10 @@
 
   .detail-row span {
     text-align: left;
+  }
+
+  .reversal-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

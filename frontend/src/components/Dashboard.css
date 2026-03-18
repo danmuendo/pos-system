@@ -262,6 +262,12 @@
   .dashboard-sidebar {
     position: static;
     min-height: auto;
+    padding: 22px 20px;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }
 
@@ -276,6 +282,47 @@
     border-radius: 26px;
   }
 
+  .dashboard-sidebar {
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .sidebar-brand {
+    align-items: start;
+  }
+
+  .brand-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+
+  .sidebar-brand h1 {
+    font-size: 18px;
+  }
+
+  .sidebar-user-card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-right: -4px;
+  }
+
+  .sidebar-nav-item {
+    min-width: 220px;
+    padding: 13px 14px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav-copy {
+    display: none;
+  }
+
   .workspace-header {
     padding: 22px 20px;
     align-items: start;
@@ -288,5 +335,9 @@
 
   .workspace-chip {
     flex: 1 1 140px;
+  }
+
+  .dashboard-content {
+    gap: 14px;
   }
 }
