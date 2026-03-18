@@ -135,9 +135,10 @@
 
 .product-row-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   align-items: center;
+  white-space: nowrap;
 }
 
 .btn-edit,
