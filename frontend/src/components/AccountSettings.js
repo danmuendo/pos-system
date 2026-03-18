@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import SectionIntro from './shared/SectionIntro';
 import './AccountSettings.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -34,15 +35,7 @@ function AccountSettings({ token, user }) {
     return `${API_BASE_URL}${url}`;
   };
 
-  useEffect(() => {
-    if (canManageBusinessProfile) {
-      fetchBusinessProfile();
-    } else {
-      setProfileLoading(false);
-    }
-  }, [canManageBusinessProfile]);
-
-  const fetchBusinessProfile = async () => {
+  const fetchBusinessProfile = useCallback(async () => {
     setProfileLoading(true);
     try {
       const response = await axios.get(`${API_URL}/auth/business-profile`, {
@@ -64,7 +57,15 @@ function AccountSettings({ token, user }) {
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (canManageBusinessProfile) {
+      fetchBusinessProfile();
+    } else {
+      setProfileLoading(false);
+    }
+  }, [canManageBusinessProfile, fetchBusinessProfile]);
 
   const handleProfileChange = (e) => {
     setProfileForm({
@@ -234,12 +235,15 @@ function AccountSettings({ token, user }) {
 
   return (
     <div className="account-settings">
-      <h2>Account Settings</h2>
-      <p className="account-help">
-        {canManageBusinessProfile
-          ? 'Manage your business details and account security.'
-          : 'Manage your account security.'}
-      </p>
+      <SectionIntro
+        eyebrow="Settings"
+        title="Account Controls"
+        description={
+          canManageBusinessProfile
+            ? 'Manage your business identity, receipt profile, and account security in one place.'
+            : 'Manage your sign-in credentials and keep your operator account secure.'
+        }
+      />
 
       {message.text && <div className={`message ${message.type}`}>{message.text}</div>}
 

@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react'; // 1. Added useCallback
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import SectionIntro from './shared/SectionIntro';
 import './ShiftCloseReport.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -10,8 +11,6 @@ function ShiftCloseReport({ token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 2. Wrap fetchReport in useCallback
-  // This memoizes the function so it doesn't trigger unnecessary re-renders
   const fetchReport = useCallback(async (targetDate) => {
     setLoading(true);
     setError('');
@@ -28,31 +27,33 @@ function ShiftCloseReport({ token }) {
     } finally {
       setLoading(false);
     }
-  }, [token]); // token is the only external dependency for the function itself
+  }, [token]);
 
-  // 3. Update useEffect to include dependencies
   useEffect(() => {
     fetchReport(date);
-  }, [fetchReport, date]); // Now the report refreshes if the date or function changes
+  }, [fetchReport, date]);
 
   const formatCurrency = (value) => `KSh ${Number(value).toFixed(2)}`;
 
   return (
     <div className="shift-close-report">
-      <div className="shift-header">
-        <h2>Shift Close Report</h2>
-        <div className="shift-controls">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-          {/* Manual refresh button still works */}
-          <button className="btn-primary" onClick={() => fetchReport(date)}>
-            Load Report
-          </button>
-        </div>
-      </div>
+      <SectionIntro
+        eyebrow="Reports"
+        title="Shift Close Report"
+        description="Review daily revenue, cashier activity, and reversal exceptions before closing the day."
+        actions={
+          <div className="shift-controls">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+            <button className="btn-primary" onClick={() => fetchReport(date)}>
+              Load Report
+            </button>
+          </div>
+        }
+      />
 
       {error && <div className="message error">{error}</div>}
       {loading && <div className="loading">Loading shift report...</div>}

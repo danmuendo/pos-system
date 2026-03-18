@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import SectionIntro from './shared/SectionIntro';
 import './ProductManagement.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -32,12 +33,7 @@ function ProductManagement({ token, user }) {
   const [adjusting, setAdjusting] = useState(false);
   const canManageProducts = user?.role === 'owner' || user?.role === 'manager';
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/products`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -46,9 +42,9 @@ function ProductManagement({ token, user }) {
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, [token]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/products/categories`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -57,7 +53,12 @@ function ProductManagement({ token, user }) {
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, [fetchCategories, fetchProducts]);
 
   const handleChange = (e) => {
     setFormData({
@@ -272,16 +273,20 @@ function ProductManagement({ token, user }) {
 
   return (
     <div className="product-management">
-      <div className="section-header">
-        <h2>Product Management</h2>
-        {canManageProducts ? (
-          <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-            {showForm ? 'Cancel' : 'Add Product'}
-          </button>
-        ) : (
-          <span className="permission-note">Read-only for cashier role</span>
-        )}
-      </div>
+      <SectionIntro
+        eyebrow="Inventory"
+        title="Product Management"
+        description="Control catalog details, restocking thresholds, and stock adjustments from a single inventory workspace."
+        actions={
+          canManageProducts ? (
+            <button onClick={() => setShowForm(!showForm)} className="btn-primary">
+              {showForm ? 'Cancel' : 'Add Product'}
+            </button>
+          ) : (
+            <span className="permission-note">Read-only for cashier role</span>
+          )
+        }
+      />
 
       {message.text && (
         <div className={`message ${message.type}`}>{message.text}</div>
@@ -518,8 +523,8 @@ function ProductManagement({ token, user }) {
         <div className="modal-overlay" onClick={() => setAdjustingProduct(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Adjust Stock — {adjustingProduct.name}</h3>
-              <button className="close-btn" onClick={() => setAdjustingProduct(null)}>×</button>
+              <h3>Adjust Stock - {adjustingProduct.name}</h3>
+              <button className="close-btn" onClick={() => setAdjustingProduct(null)}>x</button>
             </div>
             <div className="modal-body">
               <p className="current-stock">

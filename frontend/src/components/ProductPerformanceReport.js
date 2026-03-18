@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import SectionIntro from './shared/SectionIntro';
 import './ProductPerformanceReport.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -114,12 +115,14 @@ function ProductPerformanceReport({ token }) {
 
   return (
     <div className="product-performance-report">
-      <div className="report-header-row">
-        <h2>Product Performance</h2>
-        {report && (
-          <button className="btn-export" onClick={exportCSV}>Export CSV</button>
-        )}
-      </div>
+      <SectionIntro
+        eyebrow="Reports"
+        title="Product Performance"
+        description="Track high-volume sellers, low-margin items, and products that are sitting on the shelf."
+        actions={
+          report ? <button className="btn-export" onClick={exportCSV}>Export CSV</button> : null
+        }
+      />
 
       <div className="report-controls-bar">
         <div className="date-presets">
@@ -200,12 +203,12 @@ function ProductPerformanceReport({ token }) {
             <h3>Margin Analysis</h3>
             {report.missing_cost_price_count > 0 && (
               <div className="warning-notice">
-                {report.missing_cost_price_count} product(s) sold in this period have no cost price set — add cost prices in Products to include them here.
+                {report.missing_cost_price_count} product(s) sold in this period have no cost price set - add cost prices in Products to include them here.
               </div>
             )}
             <div className="margin-legend">
               <span className="margin-badge margin-good">Good ≥40%</span>
-              <span className="margin-badge margin-mid">Fair 20–39%</span>
+              <span className="margin-badge margin-mid">Fair 20-39%</span>
               <span className="margin-badge margin-low">Low &lt;20%</span>
             </div>
             <table>

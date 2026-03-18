@@ -1,38 +1,45 @@
 .receipt-page {
   min-height: 100vh;
-  background: #f3f4f6;
-  padding: 24px 16px;
+  background:
+    radial-gradient(circle at top, rgba(212, 162, 75, 0.12), transparent 22%),
+    linear-gradient(180deg, #f6efe4 0%, #efe4d3 100%);
+  padding: 28px 16px;
 }
 
 .receipt-actions {
-  max-width: 360px;
-  margin: 0 auto 12px;
+  max-width: 420px;
+  margin: 0 auto 16px;
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
 .receipt-btn {
-  border: 1px solid #0f172a;
-  background: #0f172a;
+  border: 1px solid var(--surface-dark);
+  background: var(--surface-dark);
   color: #fff;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
 }
 
 .receipt-btn.secondary {
-  background: #fff;
-  color: #0f172a;
+  background: rgba(255, 252, 247, 0.82);
+  color: var(--text);
+  border-color: var(--line-strong);
 }
 
 .receipt-paper {
-  max-width: 360px;
+  max-width: 380px;
   margin: 0 auto;
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 16px;
+  background: rgba(255, 252, 247, 0.96);
+  border: 1px solid rgba(54, 66, 56, 0.12);
+  border-radius: 28px;
+  padding: 20px 18px;
+  box-shadow: var(--shadow-md);
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   color: #111827;
@@ -64,10 +71,16 @@
   color: #6b7280;
 }
 
-.receipt-line {
+.receipt-line,
+.receipt-subtotal,
+.receipt-discount,
+.receipt-total {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+}
+
+.receipt-line {
   margin: 4px 0;
 }
 
@@ -83,22 +96,11 @@
   padding: 4px 2px;
 }
 
-.receipt-subtotal,
 .receipt-discount {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  margin-top: 4px;
-  color: #555;
-}
-
-.receipt-discount {
-  color: #c0392b;
+  color: #b93c2d;
 }
 
 .receipt-total {
-  display: flex;
-  justify-content: space-between;
   margin-top: 8px;
   font-size: 15px;
 }
@@ -133,5 +135,6 @@
     border: 0;
     border-radius: 0;
     margin: 0 auto;
+    box-shadow: none;
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import SectionIntro from './shared/SectionIntro';
 import './TransactionHistory.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -138,12 +139,16 @@ function TransactionHistory({ token, user }) {
 
   return (
     <div className="transaction-history">
-      <div className="th-header">
-        <h2>Transaction History</h2>
-        <button className="btn-export" onClick={exportCSV} title="Export to CSV">
-          Export CSV
-        </button>
-      </div>
+      <SectionIntro
+        eyebrow="History"
+        title="Transaction Ledger"
+        description="Filter completed and pending sales, inspect receipts, and reverse transactions when needed."
+        actions={
+          <button className="btn-export" onClick={exportCSV} title="Export to CSV">
+            Export CSV
+          </button>
+        }
+      />
 
       {message.text && <div className={`message ${message.type}`}>{message.text}</div>}
 
@@ -254,7 +259,7 @@ function TransactionHistory({ token, user }) {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Transaction Details</h3>
-              <button onClick={() => setSelectedTransaction(null)} className="close-btn">×</button>
+              <button onClick={() => setSelectedTransaction(null)} className="close-btn">x</button>
             </div>
 
             <div className="modal-body">

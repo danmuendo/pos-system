@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './POSCheckout.css';
 
@@ -33,11 +33,7 @@ function POSCheckout({ token }) {
   const [discountType, setDiscountType] = useState('percent');
   const [discountValue, setDiscountValue] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/products`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -46,11 +42,15 @@ function POSCheckout({ token }) {
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const addToCart = (product) => {
     const unit = product.unit || 'item';
-    const defaultQty = unit === 'item' ? 1 : 1;
+    const defaultQty = 1;
     const existingItem = cart.find((item) => item.product_id === product.id);
 
     if (existingItem) {
@@ -267,8 +267,8 @@ function POSCheckout({ token }) {
                 onClick={() => addToCart(product)}
               >
                 {product.image_url && (
-                  <img 
-                    src={product.image_url} 
+                  <img
+                    src={product.image_url}
                     alt={product.name}
                     className="product-image"
                   />
@@ -276,7 +276,9 @@ function POSCheckout({ token }) {
                 <h3>{product.name}</h3>
                 <p className="product-price">
                   KSh {parseFloat(product.price).toFixed(2)}
-                  {product.unit && product.unit !== 'item' ? `/${getUnitLabel(product.unit)}` : ''}
+                  {product.unit && product.unit !== 'item'
+                    ? `/${getUnitLabel(product.unit)}`
+                    : ''}
                 </p>
                 {product.category && (
                   <span className="product-category">{product.category}</span>
@@ -300,7 +302,9 @@ function POSCheckout({ token }) {
                     <h4>{item.name}</h4>
                     <p>
                       KSh {item.price.toFixed(2)}
-                      {item.unit && item.unit !== 'item' ? `/${getUnitLabel(item.unit)}` : ' each'}
+                      {item.unit && item.unit !== 'item'
+                        ? `/${getUnitLabel(item.unit)}`
+                        : ' each'}
                     </p>
                   </div>
                   <div className="quantity-controls">
@@ -311,13 +315,13 @@ function POSCheckout({ token }) {
                             onClick={() => addQuickWeight(item.product_id, -0.25)}
                             title="-0.25"
                           >
-                            -¼
+                            -1/4
                           </button>
                           <button
                             onClick={() => addQuickWeight(item.product_id, -0.5)}
                             title="-0.5"
                           >
-                            -½
+                            -1/2
                           </button>
                           <input
                             type="number"
@@ -333,20 +337,28 @@ function POSCheckout({ token }) {
                             onClick={() => addQuickWeight(item.product_id, 0.25)}
                             title="+0.25"
                           >
-                            +¼
+                            +1/4
                           </button>
                           <button
                             onClick={() => addQuickWeight(item.product_id, 0.5)}
                             title="+0.5"
                           >
-                            +½
+                            +1/2
                           </button>
                         </div>
                         <div className="quick-weight-row">
-                          <button onClick={() => updateQuantity(item.product_id, 0.25)}>¼ {getUnitLabel(item.unit)}</button>
-                          <button onClick={() => updateQuantity(item.product_id, 0.5)}>½ {getUnitLabel(item.unit)}</button>
-                          <button onClick={() => updateQuantity(item.product_id, 1)}>1 {getUnitLabel(item.unit)}</button>
-                          <button onClick={() => updateQuantity(item.product_id, 2)}>2 {getUnitLabel(item.unit)}</button>
+                          <button onClick={() => updateQuantity(item.product_id, 0.25)}>
+                            1/4 {getUnitLabel(item.unit)}
+                          </button>
+                          <button onClick={() => updateQuantity(item.product_id, 0.5)}>
+                            1/2 {getUnitLabel(item.unit)}
+                          </button>
+                          <button onClick={() => updateQuantity(item.product_id, 1)}>
+                            1 {getUnitLabel(item.unit)}
+                          </button>
+                          <button onClick={() => updateQuantity(item.product_id, 2)}>
+                            2 {getUnitLabel(item.unit)}
+                          </button>
                         </div>
                         <span className="qty-label">
                           {formatQty(item.quantity, item.unit)} {getUnitLabel(item.unit)}
@@ -375,7 +387,7 @@ function POSCheckout({ token }) {
                     className="remove-btn"
                     onClick={() => removeFromCart(item.product_id)}
                   >
-                    ×
+                    x
                   </button>
                 </div>
               ))}

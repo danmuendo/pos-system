@@ -1,22 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './LowStockAlert.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const DEFAULT_THRESHOLD = 10;
 
 function LowStockAlert({ token }) {
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [showAlert, setShowAlert] = useState(true);
-  const [threshold, setThreshold] = useState(10);
+  const threshold = DEFAULT_THRESHOLD;
 
-  useEffect(() => {
-    fetchLowStockProducts();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchLowStockProducts, 30000);
-    return () => clearInterval(interval);
-  }, [threshold]);
-
-  const fetchLowStockProducts = async () => {
+  const fetchLowStockProducts = useCallback(async () => {
     try {
       const response = await axios.get(
         `${API_URL}/products/low-stock?threshold=${threshold}`,
@@ -28,7 +22,13 @@ function LowStockAlert({ token }) {
     } catch (error) {
       console.error('Error fetching low stock products:', error);
     }
-  };
+  }, [threshold, token]);
+
+  useEffect(() => {
+    fetchLowStockProducts();
+    const interval = setInterval(fetchLowStockProducts, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLowStockProducts]);
 
   if (!showAlert || lowStockProducts.length === 0) {
     return null;
@@ -38,12 +38,12 @@ function LowStockAlert({ token }) {
     <div className="low-stock-alert">
       <div className="alert-header">
         <div className="alert-title">
-          <span className="alert-icon">⚠️</span>
+          <span className="alert-icon">!</span>
           <h3>Low Stock Alert</h3>
           <span className="alert-count">{lowStockProducts.length} items</span>
         </div>
         <button onClick={() => setShowAlert(false)} className="close-alert">
-          ×
+          x
         </button>
       </div>
 
