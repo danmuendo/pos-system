@@ -489,7 +489,7 @@ function ProductManagement({ token, user }) {
                 </td>
                 <td>
                   {canManageProducts ? (
-                    <>
+                    <div className="product-row-actions">
                       <button onClick={() => handleEdit(product)} className="btn-edit">
                         Edit
                       </button>
@@ -507,7 +507,7 @@ function ProductManagement({ token, user }) {
                           Delete
                         </button>
                       )}
-                    </>
+                    </div>
                   ) : (
                     <span>-</span>
                   )}

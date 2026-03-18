@@ -133,38 +133,63 @@
   background: rgba(31, 107, 82, 0.05);
 }
 
+.product-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .btn-edit,
 .btn-delete,
 .btn-adjust {
-  padding: 8px 12px;
-  border-radius: 999px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 12px;
   font-size: 11px;
-  font-weight: 700;
-  margin-right: 6px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 1px solid transparent;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(54, 66, 56, 0.1);
+  box-shadow: 0 6px 12px rgba(53, 44, 33, 0.05);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition);
 }
 
 .btn-edit {
-  background: var(--gold-soft);
-  color: #7b5520;
+  background: rgba(255, 252, 247, 0.92);
+  color: var(--text);
 }
 
 .btn-delete {
-  background: var(--danger-soft);
+  background: rgba(248, 221, 216, 0.88);
   color: var(--danger);
+  border-color: rgba(185, 60, 45, 0.14);
 }
 
 .btn-adjust {
-  background: var(--info-soft);
-  color: var(--info);
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
 }
 
 .btn-edit:hover,
 .btn-delete:hover,
 .btn-adjust:hover {
   transform: translateY(-1px);
+  box-shadow: 0 10px 16px rgba(53, 44, 33, 0.08);
+}
+
+.btn-edit:hover {
+  background: var(--surface-muted);
+}
+
+.btn-adjust:hover {
+  background: var(--accent-strong);
 }
 
 .modal-overlay {
